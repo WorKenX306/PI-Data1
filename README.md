@@ -39,7 +39,11 @@ Recommended minimal structure in this repo:
   - `train.py` — training + saving/loading artifacts
   - `predict.py` — prediction helpers (from TrainResult or artifact directory)
   - `evaluate.py` — evaluation metrics/reporting
+<<<<<<< HEAD
   - `pipeline.py` — MLOps runner (train all models + reports)
+=======
+  - `mlops_pipeline.py` — pipeline runner (train all models + reports)
+>>>>>>> cb839ec89d1a06fa68f00dc4592b3779d3a35c8f
   - Manuals:
     - `TRAIN_MANUAL.md`
     - `PREDICT_MANUAL.md`
@@ -95,6 +99,7 @@ Artifacts are saved under:
 ### 5) Train all models + generate reports (MLOps pipeline)
 
 ```powershell
+<<<<<<< HEAD
 py -3 -c "from src.pipeline import run_mlops_pipeline; run_mlops_pipeline(dataset_name='eMBB', verbose=True)"
 ```
 
@@ -112,6 +117,11 @@ On Windows, use **GNU Make from Git** if `make help` fails with `CreateProcess` 
 
 See `make help` for all targets.
 
+=======
+py -3 -c "from src.mlops_pipeline import run_mlops_pipeline; run_mlops_pipeline(dataset_name='eMBB', verbose=True)"
+```
+
+>>>>>>> cb839ec89d1a06fa68f00dc4592b3779d3a35c8f
 Reports are written to:
 - `reports/mlops/metrics_latest.csv`
 - `reports/mlops/best_models_latest.json`
