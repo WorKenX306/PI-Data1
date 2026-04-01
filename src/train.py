@@ -56,6 +56,9 @@ class TrainResult:
     preprocessor: Any
     label_encoder: LabelEncoder
     artifact_dir: Optional[str] = None
+    y_test: Optional[np.ndarray] = None
+    y_pred: Optional[np.ndarray] = None
+    y_proba: Optional[np.ndarray] = None
 
 
 AVAILABLE_MODELS = ["rf", "xgb", "lr", "et", "mlp", "lgbm"]
@@ -116,6 +119,9 @@ def load_train_result(artifact_dir: str) -> TrainResult:
         preprocessor=payload["preprocessor"],
         label_encoder=payload["label_encoder"],
         artifact_dir=artifact_dir,
+        y_test=None,
+        y_pred=None,
+        y_proba=None,
     )
 
 
@@ -175,6 +181,7 @@ def train(
     custom_params: Optional[Dict[str, Any]] = None,
     save_artifacts: bool = True,
     artifacts_base_dir: str = "data/models",
+    store_holdout: bool = False,
     verbose: bool = True,
 ) -> List[TrainResult]:
     """
@@ -258,8 +265,11 @@ def train(
         model.fit(X_train_proc, y_train)
 
         y_pred = model.predict(X_test_proc)
-        if hasattr(model, "predict_proba"):
-            y_score = model.predict_proba(X_test_proc)[:, 1]
+        y_proba_full = model.predict_proba(X_test_proc) if hasattr(model, "predict_proba") else None
+        if y_proba_full is not None and y_proba_full.shape[1] == 2:
+            y_score = y_proba_full[:, 1]
+        elif y_proba_full is not None:
+            y_score = y_proba_full
         else:
             y_score = y_pred
 
@@ -291,6 +301,9 @@ def train(
                 estimator=model,
                 preprocessor=preprocessor,
                 label_encoder=le,
+                y_test=np.asarray(y_test) if store_holdout else None,
+                y_pred=np.asarray(y_pred) if store_holdout else None,
+                y_proba=y_proba_full if store_holdout else None,
             )
         )
 

@@ -70,3 +70,62 @@ def predict_from_artifact_dir(artifact_dir: str, X_raw: Any) -> Dict[str, Any]:
     """
     train_result = load_train_result(artifact_dir)
     return predict_with_result(train_result, X_raw)
+
+
+def main() -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Predict using a saved artifact (data/models/<model>/<dataset>/artifact.pkl)."
+    )
+    parser.add_argument(
+        "--artifact",
+        default="data/models/rf/eMBB",
+        help="Directory containing artifact.pkl",
+    )
+    parser.add_argument(
+        "--dataset",
+        default="eMBB",
+        help="Dataset name to take a sample row from when --input is not set",
+    )
+    parser.add_argument(
+        "--input",
+        default=None,
+        help="Optional CSV file with feature columns (same as training). If omitted, uses head(1) from the dataset.",
+    )
+    parser.add_argument(
+        "--rows",
+        type=int,
+        default=1,
+        help="Number of rows to predict when using default dataset sample (default: 1)",
+    )
+    args = parser.parse_args()
+
+    try:
+        from .data_loader import load_all_datasets
+        from .preprocessing import make_xy
+    except Exception:
+        from data_loader import load_all_datasets
+        from preprocessing import make_xy
+
+    if args.input:
+        df = pd.read_csv(args.input)
+        X_raw = df
+    else:
+        datasets = load_all_datasets()
+        if args.dataset not in datasets:
+            raise SystemExit(
+                f"Dataset '{args.dataset}' not loaded. Available: {list(datasets.keys())}"
+            )
+        X_df, _ = make_xy(datasets[args.dataset])
+        X_raw = X_df.head(max(1, args.rows))
+
+    out = predict_from_artifact_dir(args.artifact, X_raw)
+    print("pred_labels:", out["pred_labels"].tolist())
+    print("pred_encoded:", out["pred_encoded"].tolist())
+    if out["proba"] is not None:
+        print("proba shape:", out["proba"].shape)
+
+
+if __name__ == "__main__":
+    main()
